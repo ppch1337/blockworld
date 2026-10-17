@@ -28,10 +28,10 @@
 .item-preview .catalog-hat-band{left:43px;top:78px;width:84px;height:17px;background:#ffcf4a;border-top:3px solid #252044;border-bottom:3px solid #252044}
 .item-preview .catalog-hat-brim{left:12px;top:98px;width:146px;height:28px;border:4px solid #252044;border-radius:50%;background:linear-gradient(90deg,#7cf5e8,#ff5da8,#6b35d5)}
 /* Wear the same top-hat silhouette and colors shown in the catalog */
-.avatar-hat.neon-catalog-hat{width:170px;height:145px;top:-58px;left:-8px;z-index:5}
-.avatar-hat.neon-catalog-hat .crown{left:42px;top:12px;bottom:auto;width:86px;height:92px;box-sizing:border-box;border:4px solid #252044;border-radius:15px 15px 5px 5px;border-bottom:4px solid #252044;background:linear-gradient(135deg,#7cf5e8 0%,#7cf5e8 28%,#ff5da8 29%,#ff5da8 58%,#6b35d5 59%,#6b35d5 100%);box-shadow:inset -8px 0 rgba(37,32,68,.12)}
-.avatar-hat.neon-catalog-hat .band{left:43px;top:78px;bottom:auto;width:84px;height:17px;box-sizing:border-box;background:#ffcf4a;border-top:3px solid #252044;border-bottom:3px solid #252044;z-index:2}
-.avatar-hat.neon-catalog-hat .brim{left:12px;top:98px;bottom:auto;width:146px;height:28px;box-sizing:border-box;border:4px solid #252044;border-radius:50%;background:linear-gradient(90deg,#7cf5e8,#ff5da8,#6b35d5);z-index:3}
+.avatar-hat.neon-catalog-hat{width:110px;height:94px;top:-48px;left:22px;z-index:5}
+.avatar-hat.neon-catalog-hat .crown{left:27px;top:8px;bottom:auto;width:56px;height:60px;box-sizing:border-box;border:4px solid #252044;border-radius:15px 15px 5px 5px;border-bottom:4px solid #252044;background:linear-gradient(135deg,#7cf5e8 0%,#7cf5e8 28%,#ff5da8 29%,#ff5da8 58%,#6b35d5 59%,#6b35d5 100%);box-shadow:inset -8px 0 rgba(37,32,68,.12)}
+.avatar-hat.neon-catalog-hat .band{left:28px;top:51px;bottom:auto;width:55px;height:11px;box-sizing:border-box;background:#ffcf4a;border-top:3px solid #252044;border-bottom:3px solid #252044;z-index:2}
+.avatar-hat.neon-catalog-hat .brim{left:7px;top:64px;bottom:auto;width:96px;height:18px;box-sizing:border-box;border:4px solid #252044;border-radius:50%;background:linear-gradient(90deg,#7cf5e8,#ff5da8,#6b35d5);z-index:3}
 .catalog-shirt-only{width:120px;height:125px;clip-path:polygon(22% 0,39% 0,50% 12%,61% 0,78% 0,100% 25%,82% 43%,75% 33%,75% 100%,25% 100%,25% 33%,18% 43%,0 25%);display:grid;place-items:center;filter:drop-shadow(3px 5px 0 rgba(37,32,68,.18))}
 .catalog-shirt-only .avatar-shirt-logo{position:static;display:block;width:42px;height:42px;transform:rotate(-8deg)}
 .catalog-shirt-only .bw-brand-logo{width:100%;height:100%}
@@ -430,7 +430,7 @@ function toggleCatalogWear(itemId,button){
  const avatarHat=document.getElementById('avatarHat');
  const isWearing=button.dataset.wearing==='true';
  if(isWearing){avatarHat.style.display='none';avatarHat.classList.remove('neon-catalog-hat');button.dataset.wearing='false';button.textContent='Wear item';button.classList.add('primary');button.classList.remove('light');return}
- document.getElementById('avatarHair').style.display='none';avatarHat.style.display='block';avatarHat.classList.add('neon-catalog-hat');
+ document.getElementById('avatarHair').style.display='block';avatarHat.style.display='block';avatarHat.classList.add('neon-catalog-hat');
  button.dataset.wearing='true';button.textContent='Remove item';button.classList.remove('primary');button.classList.add('light');
 }
 
@@ -463,3 +463,11 @@ document.getElementById('resetAvatar').addEventListener('click',()=>{document.ge
 </script>
 </body>
 </html>
+<style>
+/* Keep the complete neon hat centered in the owned-item thumbnail. */
+.item-preview .catalog-hat-only{position:relative;width:58px;height:58px;min-height:0;overflow:hidden;display:block}
+.item-preview .catalog-hat-only .catalog-top-hat{position:absolute;left:50%;top:50%;width:170px;height:145px;transform:translate(-50%,-50%) scale(.32);transform-origin:center center;margin:0}
+/* Hair remains visible beneath the hat, with the hat positioned at the top of the head. */
+#avatarHair{z-index:4}
+.avatar-hat.neon-catalog-hat{z-index:5}
+</style>
