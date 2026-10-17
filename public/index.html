@@ -13,6 +13,20 @@
 
 .catalog-toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin:18px 0 20px}.catalog-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.catalog-card{border:1px solid var(--line);background:#fff;border-radius:17px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s,border-color .15s}.catalog-card:hover{transform:translateY(-3px);border-color:#aab8ff}.catalog-art{height:170px;background:linear-gradient(145deg,#eef1ff,#e1e8ff);display:grid;place-items:center;position:relative}.catalog-art .avatar{transform:scale(.52);transform-origin:center center}.sale-tag{position:absolute;top:11px;left:11px;background:#ffedf0;color:#c42d50;border-radius:7px;padding:5px 8px;font-size:11px;font-weight:900}.catalog-card-copy{padding:14px}.catalog-card-copy strong{display:block;font-size:14px}.catalog-card-copy p{margin:5px 0 12px;color:var(--muted);font-size:12px;line-height:1.4}.catalog-price{display:flex;align-items:center;justify-content:space-between;gap:8px}.price-now{font-weight:900;color:#a96a00}.price-old{color:#969bad;text-decoration:line-through;font-size:12px;margin-left:5px}.coin-small{font-size:11px;font-weight:900;color:#946000}.catalog-modal-backdrop{position:fixed;inset:0;background:#11172c99;display:none;place-items:center;padding:20px;z-index:50}.catalog-modal-backdrop.open{display:grid}.catalog-modal{width:min(780px,100%);max-height:90vh;overflow:auto;background:white;border-radius:22px;box-shadow:0 25px 80px #0003;display:grid;grid-template-columns:1fr 1fr;position:relative}.catalog-modal-preview{background:linear-gradient(145deg,#eef1ff,#e0e7ff);min-height:400px;display:grid;place-items:center;position:relative;overflow:hidden;padding:18px;box-sizing:border-box}.catalog-modal-preview .avatar{display:block;position:relative;width:154px;height:278px;transform:scale(.9);transform-origin:center center;flex:none}.catalog-art .avatar{display:block;position:relative;width:154px;height:278px;transform:scale(.52);transform-origin:center center;flex:none}.catalog-modal-preview .avatar-hat{z-index:3}.catalog-modal-preview .avatar-head,.catalog-modal-preview .avatar-body,.catalog-modal-preview .avatar-arm,.catalog-modal-preview .avatar-leg{display:block}.catalog-art .avatar-shirt-logo .brandmark{transform:rotate(-8deg) skew(-5deg)}.catalog-modal-info{padding:34px 28px}.catalog-modal-info h2{font-size:27px;letter-spacing:-.8px;margin:9px 0}.catalog-modal-info p{color:var(--muted);line-height:1.6;font-size:14px}.catalog-modal-price{font-size:27px;font-weight:1000;color:#a96a00;margin:18px 0}.catalog-close{position:absolute;right:12px;top:12px;width:36px;height:36px;border-radius:50%;background:#fff;color:var(--ink);border:1px solid var(--line);font-size:22px;z-index:2}.catalog-owned{background:#e7f8ef;color:#16794d;border-radius:8px;padding:6px 9px;font-size:11px;font-weight:900;display:inline-block}.catalog-empty{padding:22px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);grid-column:1/-1}.catalog-preview-label{position:absolute;bottom:15px;left:0;right:0;text-align:center;font-size:10px;letter-spacing:1px;font-weight:900;color:#7e89ae}@media(max-width:900px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalog-modal{grid-template-columns:1fr}.catalog-modal-preview{min-height:320px}.catalog-modal-info{padding:25px}}@media(max-width:520px){.catalog-grid{grid-template-columns:1fr 1fr;gap:10px}.catalog-art{height:135px}.catalog-card-copy{padding:10px}.catalog-modal-backdrop{padding:10px}}
 
+
+.catalog-item-only{width:100%;height:100%;min-height:150px;display:grid;place-items:center;position:relative;overflow:hidden}
+.catalog-hat-only{min-height:150px}
+.catalog-top-hat{width:170px;height:145px;position:relative;filter:drop-shadow(5px 8px 0 rgba(37,32,68,.14));transform:scale(.9)}
+.catalog-hat-crown{position:absolute;left:42px;top:12px;width:86px;height:92px;border:4px solid #252044;border-radius:15px 15px 5px 5px;background:linear-gradient(135deg,#7cf5e8 0%,#7cf5e8 28%,#ff5da8 29%,#ff5da8 58%,#6b35d5 59%,#6b35d5 100%);box-shadow:inset -8px 0 rgba(37,32,68,.12)}
+.catalog-hat-band{position:absolute;left:43px;top:78px;width:84px;height:17px;background:#ffcf4a;border-top:3px solid #252044;border-bottom:3px solid #252044;z-index:2}
+.catalog-hat-brim{position:absolute;left:12px;top:98px;width:146px;height:28px;border:4px solid #252044;border-radius:50%;background:linear-gradient(90deg,#7cf5e8,#ff5da8,#6b35d5);z-index:3}
+.catalog-shirt-only{width:120px;height:125px;clip-path:polygon(22% 0,39% 0,50% 12%,61% 0,78% 0,100% 25%,82% 43%,75% 33%,75% 100%,25% 100%,25% 33%,18% 43%,0 25%);display:grid;place-items:center;filter:drop-shadow(3px 5px 0 rgba(37,32,68,.18))}
+.catalog-shirt-only .avatar-shirt-logo{position:static;display:block;width:42px;height:42px;transform:rotate(-8deg)}
+.catalog-shirt-only .bw-brand-logo{width:100%;height:100%}
+#catalogAvatarPreview .catalog-item-only{min-height:300px}
+#catalogAvatarPreview .catalog-hat-only{min-height:300px}
+#catalogAvatarPreview .catalog-top-hat{transform:scale(1.5)}
+
 </style>
 </head>
 <body>
@@ -96,7 +110,7 @@
   <div class="catalog-modal">
     <button class="catalog-close" id="catalogClose" type="button" aria-label="Close item details">×</button>
     <div class="catalog-modal-preview"><div class="avatar" id="catalogAvatarPreview"><div class="avatar-hair"></div><div class="avatar-hat"><div class="crown"></div><div class="band"></div><div class="brim"></div></div><div class="avatar-head"><div class="avatar-face"><div class="avatar-eyes"><i></i><i></i></div><div class="avatar-mouth"></div></div></div><div class="avatar-arm left"></div><div class="avatar-arm right"></div><div class="avatar-body"><span class="avatar-shirt-logo"><svg class="bw-brand-logo" viewBox="0 0 40 40"><rect x="3" y="3" width="31" height="31" rx="10" fill="#fff" stroke="#252044" stroke-width="2"/><path d="M12 8h10c6 0 8 7 3 10 5 3 2 9-4 9H12z" fill="#ff5da8" stroke="#252044" stroke-width="1.5"/><path d="M15 11h6c3 0 4 4 1 5h-7zm0 8h7c3 0 3 5 0 5h-7z" fill="#6b35d5" stroke="#fff" stroke-width=".6"/></svg></span></div><div class="avatar-leg left"></div><div class="avatar-leg right"></div></div><div class="catalog-preview-label">ITEM PREVIEW</div></div>
-    <div class="catalog-modal-info"><span class="sale-tag" style="position:static;display:inline-block">ON SALE</span><h2 id="catalogModalName">Item name</h2><p id="catalogModalDescription"></p><div><span class="price-now" id="catalogModalPrice">0 coins</span><span class="price-old" id="catalogModalOldPrice"></span></div><p id="catalogModalStatus">See how it looks on your avatar before buying.</p><button class="btn primary" id="catalogBuyButton" type="button" style="width:100%;margin-top:8px">Buy item</button><button class="btn outline" id="catalogTryButton" type="button" style="width:100%;margin-top:9px">Try in Avatar Studio</button></div>
+    <div class="catalog-modal-info"><span class="sale-tag" style="position:static;display:inline-block">ON SALE</span><h2 id="catalogModalName">Item name</h2><p id="catalogModalDescription"></p><div><span class="price-now" id="catalogModalPrice">0 coins</span><span class="price-old" id="catalogModalOldPrice"></span></div><p id="catalogModalStatus">See how it looks on your avatar before buying.</p><button class="btn primary" id="catalogBuyButton" type="button" style="width:100%;margin-top:8px">Buy item</button></div>
   </div>
 </div>
 
@@ -239,8 +253,7 @@ function coinCounterMarkup(){
 }
 function updateUserActions(){
   if(!signedInAs){topActions.innerHTML='<button class="btn outline" data-page="login">Log in</button><button class="btn primary" data-page="signup">Sign up</button>';topActions.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));return}
-  topActions.innerHTML='<span class="user-chip" style="display:block">'+escapeText(currentUser?.displayName||signedInAs)+'</span>'+coinCounterMarkup()+'<button class="btn light" id="profileShortcut">My Profile</button><button class="btn light" id="studioShortcut">My Avatar</button><button class="btn outline" id="logoutBtn">Log out</button>';
-  document.getElementById('profileShortcut').onclick=()=>showPage('profile');document.getElementById('studioShortcut').onclick=()=>showPage('studio');
+  topActions.innerHTML='<span class="user-chip" style="display:block">'+escapeText(currentUser?.displayName||signedInAs)+'</span>'+coinCounterMarkup()+'<button class="btn outline" id="logoutBtn">Log out</button>';
   document.getElementById('logoutBtn').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',credentials:'same-origin'})}catch(_){}signedInAs='';currentUser=null;updateUserActions();updateProfileForm();toast('You are logged out.')};
   refreshHeaderCoinCounter();
   if(document.getElementById('catalog')?.classList.contains('active')) loadCatalog();
@@ -371,16 +384,14 @@ document.getElementById('findProfileForm').addEventListener('submit',async e=>{
 });
 
 const catalogItems = [
- {id:'blockworld-tee',name:'BlockWorld Tee',description:'The signature blue tee featuring the colorful BlockWorld B logo.',price:99,originalPrice:150,type:'shirt',look:'classic',color:'#5572e9'},
  {id:'neon-crown',name:'Neon Dream Top Hat',description:'A bright neon top hat accessory for standing out in every world.',price:349,originalPrice:500,type:'hat',look:'crown'}
 ];
 let catalogOwned = new Set();
 let selectedCatalogItem = null;
 function catalogAvatarMarkup(item){
- const hat=item.type==='hat'; const pixel=item.look==='pixel';
- return '<div class="avatar '+(pixel?'catalog-pixel-avatar':'')+'"><div class="avatar-hair" style="'+(hat?'display:none':'')+'"></div>'+
- (hat?'<div class="avatar-hat" style="display:block"><div class="crown" style="'+(item.look==='crown'?'background:linear-gradient(90deg,#7cf5e8,#ff5da8);border-color:#6b35d5':'')+'"></div><div class="band" style="'+(item.look==='crown'?'background:#ffcf4a':'')+'"></div><div class="brim" style="'+(item.look==='crown'?'background:#7cf5e8;border-color:#6b35d5':'')+'"></div></div>':'')+
- '<div class="avatar-head"><div class="avatar-face"><div class="avatar-eyes"><i></i><i></i></div><div class="avatar-mouth"></div></div></div><div class="avatar-arm left"></div><div class="avatar-arm right"></div><div class="avatar-body '+(pixel?'pixel-shirt':'')+'" style="'+(!pixel&&!hat?'background:'+item.color:'')+'">'+(!pixel&&!hat?'<span class="avatar-shirt-logo"><span class="brandmark" style="width:32px;height:32px;font-size:22px">B</span></span>':'')+'</div><div class="avatar-leg left"></div><div class="avatar-leg right"></div></div>';
+ const hat=item.type==='hat';
+ if(hat) return '<div class="catalog-item-only catalog-hat-only"><div class="catalog-top-hat"><div class="catalog-hat-crown"></div><div class="catalog-hat-band"></div><div class="catalog-hat-brim"></div></div></div>';
+ return '<div class="catalog-item-only"><div class="catalog-shirt-only" style="background:'+item.color+'"><span class="avatar-shirt-logo"><svg class="bw-brand-logo" viewBox="0 0 40 40" aria-label="BlockWorld logo"><rect x="3" y="3" width="31" height="31" rx="10" fill="#fff" stroke="#252044" stroke-width="2"/><path d="M12 8h10c6 0 8 7 3 10 5 3 2 9-4 9H12z" fill="#ff5da8" stroke="#252044" stroke-width="1.5"/><path d="M15 11h6c3 0 4 4 1 5h-7zm0 8h7c3 0 3 5 0 5h-7z" fill="#6b35d5" stroke="#fff" stroke-width=".6"/></svg></span></div></div>';
 }
 function renderCatalog(){
  const grid=document.getElementById('catalogGrid'); if(!grid)return;
@@ -410,7 +421,6 @@ document.getElementById('catalogBuyButton').addEventListener('click',async()=>{
  try{const r=await fetch('/api/catalog/purchase',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({itemId:selectedCatalogItem.id})});const data=await r.json();if(!r.ok)throw new Error(data.error||'Purchase failed.');catalogOwned.add(selectedCatalogItem.id);document.getElementById('catalogModalStatus').textContent='Purchase successful! This item is now in your inventory.';btn.textContent='Owned';document.getElementById('headerCoinBalance').textContent=Number(data.balance).toLocaleString();renderCatalog();toast('Purchased '+selectedCatalogItem.name+'!');}
  catch(err){btn.disabled=false;btn.textContent='Buy for '+selectedCatalogItem.price.toLocaleString()+' coins';toast(err.message)}
 });
-document.getElementById('catalogTryButton').addEventListener('click',()=>{closeCatalogModal();showPage('studio');if(selectedCatalogItem?.look==='pixel')document.querySelector('[data-shirt="pixel"]').click();else if(selectedCatalogItem?.look==='classic')document.querySelector('[data-shirt="classic"]').click();else if(selectedCatalogItem?.type==='hat'){wearingHat=true;document.getElementById('avatarHat').style.display='block';document.getElementById('avatarHair').style.display='none';document.getElementById('hatToggle').textContent='Remove item';} });
 
 function escapeText(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
