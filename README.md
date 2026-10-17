@@ -81,3 +81,7 @@ The CLI setup and deploy commands require network access and authentication to t
 
 ## Hourly currency rewards
 The Currency page lets logged-in players claim a random 100–500 coins once every 60 minutes. The server chooses the reward and enforces the cooldown in PostgreSQL, so refreshing the page or sending repeated requests cannot reset the timer. On startup, the server adds `currency` and `currency_claimed_at` columns to the existing `users` table using safe `ADD COLUMN IF NOT EXISTS` migrations; existing accounts are preserved.
+
+
+## Hourly reward UI update
+The navigation label is now Hourly Reward. A BlockWorld BW coin icon is used for the wallet and a persistent header counter shows the logged-in player's balance.
