@@ -332,7 +332,9 @@ app.post('/api/avatar/outfit', async (req, res) => {
   const outfit = {
     skinColor: /^#[0-9a-fA-F]{6}$/.test(body.skinColor || '') ? body.skinColor : '#ffd83d',
     shirt: body.shirt === 'pixel' ? 'pixel' : 'classic',
-    hat: ['none','classic','neon','og'].includes(body.hat) ? body.hat : 'none'
+    hat: ['none','classic','neon','og'].includes(body.hat) ? body.hat : 'none',
+    hairColor: /^#[0-9a-fA-F]{6}$/.test(body.hairColor || '') ? body.hairColor : '#473026',
+    hairStyle: body.hairStyle === 'long' ? 'long' : 'short'
   };
   try {
     await pool.query('UPDATE users SET avatar_outfit = $1::jsonb WHERE id = $2', [JSON.stringify(outfit), req.session.userId]);
