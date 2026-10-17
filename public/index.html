@@ -27,6 +27,8 @@
 #catalogAvatarPreview .catalog-hat-only{min-height:300px}
 #catalogAvatarPreview .catalog-top-hat{transform:scale(1.5)}
 
+
+.neon-catalog-hat .crown,.neon-catalog-hat .catalog-hat-crown{background:linear-gradient(135deg,#ff5da8,#6b35d5,#35e7df)!important;border:2px solid #252044!important}.neon-catalog-hat .band{background:#35e7df!important}.neon-catalog-hat .brim{background:#252044!important}
 </style>
 </head>
 <body>
@@ -91,7 +93,7 @@
           <span class="shirt-check">✓</span>
         </button>
       </div></div>
-      <div class="control-group"><h3>Accessories</h3><div class="item-card"><div class="item-preview"><div class="mini-hat"></div></div><div class="item-details"><strong>hat</strong><small>Classic black top hat</small></div><button class="btn primary" id="hatToggle">Wear item</button></div></div>
+      <div class="control-group"><h3>Accessories</h3><div class="item-card"><div class="item-preview"><div class="mini-hat"></div></div><div class="item-details"><strong>hat</strong><small>Classic black top hat</small></div><button class="btn primary" id="hatToggle">Wear item</button></div><div id="ownedCatalogAccessories"></div></div>
       <button class="btn outline" id="resetAvatar" style="width:100%">Reset avatar</button>
     </section>
   </div>
@@ -194,6 +196,7 @@ function showPage(name){
   if(name==='profile') refreshProfilePage();
   if(name==='currency') refreshCurrencyPage();
   if(name==='catalog') loadCatalog();
+  if(name==='studio') loadCatalogInventoryForStudio();
   refreshHeaderCoinCounter();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -398,10 +401,27 @@ function renderCatalog(){
  grid.innerHTML=catalogItems.map(item=>'<button type="button" class="catalog-card" data-catalog-item="'+item.id+'" aria-label="View '+escapeText(item.name)+' details"><div class="catalog-art"><span class="sale-tag">SALE</span>'+catalogAvatarMarkup(item)+'</div><div class="catalog-card-copy"><strong>'+escapeText(item.name)+'</strong><p>'+escapeText(item.description)+'</p><div class="catalog-price"><span><span class="price-now">'+item.price+' coins</span><span class="price-old">'+item.originalPrice+'</span></span><span class="coin-small">'+(catalogOwned.has(item.id)?'OWNED':'VIEW ITEM ↗')+'</span></div></div></button>').join('');
  grid.querySelectorAll('[data-catalog-item]').forEach(card=>card.addEventListener('click',()=>openCatalogItem(card.dataset.catalogItem)));
 }
-async function loadCatalog(){
- if(currentUser){try{const r=await fetch('/api/catalog/owned',{credentials:'same-origin'});if(r.ok){const d=await r.json();catalogOwned=new Set(d.items||[])}}catch(_){}}
- renderCatalog();
+async function fetchCatalogOwnership(){
+ if(!currentUser){catalogOwned=new Set();return}
+ try{const r=await fetch('/api/catalog/owned',{credentials:'same-origin'});if(r.ok){const d=await r.json();catalogOwned=new Set(d.items||[])}}
+ catch(_){}
 }
+async function loadCatalog(){ await fetchCatalogOwnership(); renderCatalog(); }
+async function loadCatalogInventoryForStudio(){
+ await fetchCatalogOwnership();
+ const container=document.getElementById('ownedCatalogAccessories'); if(!container)return;
+ const ownedCatalogItems=catalogItems.filter(item=>catalogOwned.has(item.id));
+ container.innerHTML=ownedCatalogItems.map(item=>'<div class="item-card owned-catalog-item" style="margin-top:10px"><div class="item-preview">'+catalogAvatarMarkup(item)+'</div><div class="item-details"><strong>'+escapeText(item.name)+'</strong><small>Owned catalog item</small></div><button class="btn primary" type="button" data-wear-catalog="'+item.id+'">Wear item</button></div>').join('');
+ container.querySelectorAll('[data-wear-catalog]').forEach(button=>button.addEventListener('click',()=>toggleCatalogWear(button.dataset.wearCatalog,button)));
+}
+function toggleCatalogWear(itemId,button){
+ const avatarHat=document.getElementById('avatarHat');
+ const isWearing=button.dataset.wearing==='true';
+ if(isWearing){avatarHat.style.display='none';avatarHat.classList.remove('neon-catalog-hat');button.dataset.wearing='false';button.textContent='Wear item';button.classList.add('primary');button.classList.remove('light');return}
+ document.getElementById('avatarHair').style.display='none';avatarHat.style.display='block';avatarHat.classList.add('neon-catalog-hat');
+ button.dataset.wearing='true';button.textContent='Remove item';button.classList.remove('primary');button.classList.add('light');
+}
+
 function openCatalogItem(id){
  const item=catalogItems.find(x=>x.id===id);if(!item)return;selectedCatalogItem=item;
  document.getElementById('catalogModalName').textContent=item.name;document.getElementById('catalogModalDescription').textContent=item.description;
@@ -418,7 +438,7 @@ document.getElementById('catalogRefresh').addEventListener('click',loadCatalog);
 document.getElementById('catalogBuyButton').addEventListener('click',async()=>{
  if(!selectedCatalogItem)return;if(!currentUser){closeCatalogModal();toast('Please log in to buy items.');showPage('login');return}
  const btn=document.getElementById('catalogBuyButton');btn.disabled=true;btn.textContent='Purchasing…';
- try{const r=await fetch('/api/catalog/purchase',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({itemId:selectedCatalogItem.id})});const data=await r.json();if(!r.ok)throw new Error(data.error||'Purchase failed.');catalogOwned.add(selectedCatalogItem.id);document.getElementById('catalogModalStatus').textContent='Purchase successful! This item is now in your inventory.';btn.textContent='Owned';document.getElementById('headerCoinBalance').textContent=Number(data.balance).toLocaleString();renderCatalog();toast('Purchased '+selectedCatalogItem.name+'!');}
+ try{const r=await fetch('/api/catalog/purchase',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({itemId:selectedCatalogItem.id})});const data=await r.json();if(!r.ok)throw new Error(data.error||'Purchase failed.');catalogOwned.add(selectedCatalogItem.id);document.getElementById('catalogModalStatus').textContent='Purchase successful! This item is now in your inventory.';btn.textContent='Owned';document.getElementById('headerCoinBalance').textContent=Number(data.balance).toLocaleString();renderCatalog();loadCatalogInventoryForStudio();toast('Purchased '+selectedCatalogItem.name+'!');}
  catch(err){btn.disabled=false;btn.textContent='Buy for '+selectedCatalogItem.price.toLocaleString()+' coins';toast(err.message)}
 });
 
