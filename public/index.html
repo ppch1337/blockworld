@@ -19,6 +19,7 @@
     <button class="active" data-page="home">Home</button>
     <button data-page="studio">Avatar Studio</button>
     <button data-page="profile">Profiles</button>
+    <button data-page="currency">Currency</button>
   </nav>
   <div class="top-actions" id="topActions">
     <button class="btn outline" data-page="login">Log in</button>
@@ -77,6 +78,25 @@
   </div>
 </main>
 
+
+
+<main class="container page" id="currency">
+  <h1 class="page-title">BlockWorld Currency</h1>
+  <p class="page-subtitle">Claim a random reward every hour and build up your wallet.</p>
+  <div class="card" style="max-width:720px;margin:0 auto;padding:26px">
+    <div style="text-align:center;padding:18px 10px 24px">
+      <div style="font-size:14px;color:var(--muted);font-weight:800;letter-spacing:1px">YOUR BALANCE</div>
+      <div id="currencyBalance" style="font-size:clamp(42px,8vw,64px);font-weight:1000;letter-spacing:-2px;margin:8px 0;color:#b77900">🪙 0</div>
+      <div id="currencyStatus" class="notice" aria-live="polite">Log in to view your wallet and claim rewards.</div>
+      <button class="btn primary" id="claimCurrencyButton" type="button" style="margin-top:16px" disabled>Claim hourly reward</button>
+      <div id="currencyCountdown" style="margin-top:12px;color:var(--muted);font-size:13px"></div>
+    </div>
+    <div style="border-top:1px solid var(--line);padding-top:18px">
+      <h2 style="font-size:18px;margin:0 0 8px">Hourly reward</h2>
+      <p style="margin:0;color:var(--muted);line-height:1.6">Get a random amount of <strong>100–500 coins</strong> once every 60 minutes. Your balance and claim time are saved to your account, so refreshing the page won't reset the timer.</p>
+    </div>
+  </div>
+</main>
 
 <main class="container page" id="profile">
   <h1 class="page-title">Player Profiles</h1>
@@ -138,6 +158,7 @@ function showPage(name){
   document.querySelectorAll('.nav [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===name));
   if(name==='login'||name==='signup'){topActions.style.display='none'}else{topActions.style.display='flex'}
   if(name==='profile') refreshProfilePage();
+  if(name==='currency') refreshCurrencyPage();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 navButtons.forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
@@ -205,6 +226,86 @@ async function refreshProfilePage(){
   try{const response=await fetch('/api/me',{credentials:'same-origin'});const data=await response.json();if(response.ok&&data.user){currentUser=data.user;signedInAs=data.user.username;updateUserActions();updateProfileForm()}}
   catch(_){toast('Could not refresh your profile right now.')}
 }
+
+let currencyCountdownTimer = null;
+let currencyNextClaimAt = null;
+function formatCountdown(ms) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  return [hours, minutes, seconds].map(n => String(n).padStart(2, '0')).join(':');
+}
+function renderCurrencyCountdown() {
+  const countdown = document.getElementById('currencyCountdown');
+  const button = document.getElementById('claimCurrencyButton');
+  if (!currentUser) {
+    countdown.textContent = '';
+    button.disabled = true;
+    return;
+  }
+  if (!currencyNextClaimAt || Date.now() >= new Date(currencyNextClaimAt).getTime()) {
+    countdown.textContent = 'Your hourly reward is ready!';
+    button.disabled = false;
+  } else {
+    countdown.textContent = 'Next reward in ' + formatCountdown(new Date(currencyNextClaimAt).getTime() - Date.now());
+    button.disabled = true;
+  }
+}
+async function refreshCurrencyPage() {
+  const balance = document.getElementById('currencyBalance');
+  const status = document.getElementById('currencyStatus');
+  const button = document.getElementById('claimCurrencyButton');
+  if (!currentUser) {
+    balance.textContent = '🪙 —';
+    status.textContent = 'Log in to view your wallet and claim rewards.';
+    button.disabled = true;
+    document.getElementById('currencyCountdown').textContent = '';
+    return;
+  }
+  status.textContent = 'Loading your wallet…';
+  try {
+    const response = await fetch('/api/currency', { credentials: 'same-origin' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Could not load your wallet.');
+    balance.textContent = '🪙 ' + Number(data.balance).toLocaleString();
+    status.textContent = data.canClaim ? 'Your hourly reward is ready to claim!' : 'You have already claimed this hour’s reward.';
+    currencyNextClaimAt = data.nextClaimAt;
+    renderCurrencyCountdown();
+    if (currencyCountdownTimer) clearInterval(currencyCountdownTimer);
+    currencyCountdownTimer = setInterval(renderCurrencyCountdown, 1000);
+  } catch (error) {
+    status.textContent = error.message;
+    button.disabled = true;
+  }
+}
+document.getElementById('claimCurrencyButton').addEventListener('click', async () => {
+  const button = document.getElementById('claimCurrencyButton');
+  const status = document.getElementById('currencyStatus');
+  button.disabled = true;
+  button.textContent = 'Claiming…';
+  try {
+    const response = await fetch('/api/currency/claim', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: '{}'
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Could not claim your reward.');
+    document.getElementById('currencyBalance').textContent = '🪙 ' + Number(data.balance).toLocaleString();
+    status.textContent = 'You received ' + data.reward + ' coins! 🎉';
+    currencyNextClaimAt = data.nextClaimAt;
+    renderCurrencyCountdown();
+  } catch (error) {
+    status.textContent = error.message;
+    await refreshCurrencyPage();
+  } finally {
+    button.textContent = 'Claim hourly reward';
+    renderCurrencyCountdown();
+  }
+});
+
 document.getElementById('profileBio').addEventListener('input',()=>{document.getElementById('bioCount').textContent=String(document.getElementById('profileBio').value.length)});
 document.getElementById('profileForm').addEventListener('submit',async e=>{
   e.preventDefault();if(!currentUser){toast('Log in to edit your profile.');return}

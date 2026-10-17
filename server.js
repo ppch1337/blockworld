@@ -151,6 +151,8 @@ async function initializeDatabase() {
   // Add profile fields safely for existing accounts; existing users are preserved.
   await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name VARCHAR(30) NOT NULL DEFAULT ''");
   await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS bio VARCHAR(160) NOT NULL DEFAULT ''");
+  await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS currency BIGINT NOT NULL DEFAULT 0");
+  await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS currency_claimed_at TIMESTAMPTZ");
   await pool.query("UPDATE users SET display_name = username WHERE display_name = ''");
   await pool.query('SELECT 1');
   console.log('Connected to PostgreSQL; account tables are ready.');
@@ -311,6 +313,77 @@ app.post('/api/profile', async (req, res) => {
     if (error.code === '23505') return res.status(409).json({ error: 'That username is already taken.' });
     console.error('Profile update error:', error.message);
     return res.status(500).json({ error: 'Could not save your profile right now.' });
+  }
+});
+
+
+// Currency wallet and hourly reward. The server chooses the amount and enforces the cooldown.
+app.get('/api/currency', async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Log in to view your wallet.' });
+  if (!pool) return res.status(503).json({ error: 'Currency requires the connected PostgreSQL database.' });
+  try {
+    const result = await pool.query(
+      'SELECT currency, currency_claimed_at FROM users WHERE id = $1',
+      [req.session.userId]
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: 'Account not found.' });
+    const row = result.rows[0];
+    const lastClaim = row.currency_claimed_at ? new Date(row.currency_claimed_at).getTime() : null;
+    const nextClaimAt = lastClaim === null ? null : lastClaim + 60 * 60 * 1000;
+    return res.json({
+      balance: Number(row.currency || 0),
+      canClaim: nextClaimAt === null || Date.now() >= nextClaimAt,
+      nextClaimAt: nextClaimAt === null ? null : new Date(nextClaimAt).toISOString()
+    });
+  } catch (error) {
+    console.error('Currency lookup error:', error.message);
+    return res.status(500).json({ error: 'Could not load your wallet right now.' });
+  }
+});
+
+app.post('/api/currency/claim', async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Log in to claim currency.' });
+  if (!pool) return res.status(503).json({ error: 'Currency requires the connected PostgreSQL database.' });
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await client.query(
+      'SELECT currency, currency_claimed_at FROM users WHERE id = $1 FOR UPDATE',
+      [req.session.userId]
+    );
+    if (!result.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Account not found.' });
+    }
+    const row = result.rows[0];
+    const now = Date.now();
+    const lastClaim = row.currency_claimed_at ? new Date(row.currency_claimed_at).getTime() : null;
+    const nextClaimAt = lastClaim === null ? null : lastClaim + 60 * 60 * 1000;
+    if (nextClaimAt !== null && now < nextClaimAt) {
+      await client.query('ROLLBACK');
+      return res.status(429).json({
+        error: 'Your next reward is not ready yet.',
+        balance: Number(row.currency || 0),
+        nextClaimAt: new Date(nextClaimAt).toISOString()
+      });
+    }
+    const reward = Math.floor(Math.random() * 401) + 100;
+    const updated = await client.query(
+      'UPDATE users SET currency = currency + $1, currency_claimed_at = NOW() WHERE id = $2 RETURNING currency, currency_claimed_at',
+      [reward, req.session.userId]
+    );
+    await client.query('COMMIT');
+    return res.json({
+      reward,
+      balance: Number(updated.rows[0].currency),
+      nextClaimAt: new Date(new Date(updated.rows[0].currency_claimed_at).getTime() + 60 * 60 * 1000).toISOString()
+    });
+  } catch (error) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    console.error('Currency claim error:', error.message);
+    return res.status(500).json({ error: 'Could not claim your reward right now.' });
+  } finally {
+    client.release();
   }
 });
 

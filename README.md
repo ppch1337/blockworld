@@ -77,3 +77,7 @@ The CLI setup and deploy commands require network access and authentication to t
 - Render production mode requires both `DATABASE_URL` and a strong `SESSION_SECRET`.
 - This is a starter project, not a fully hardened identity service. Before a larger public launch, add email verification, password reset, account deletion, monitoring, and a backup/restore plan. The included rate limit is a basic layer, not a complete anti-abuse system.
 - Review the current free-tier limits of Render and your database provider; free plans can change, sleep, or have storage/usage limits. A free subdomain is provided by Render; a custom domain usually costs extra.
+
+
+## Hourly currency rewards
+The Currency page lets logged-in players claim a random 100–500 coins once every 60 minutes. The server chooses the reward and enforces the cooldown in PostgreSQL, so refreshing the page or sending repeated requests cannot reset the timer. On startup, the server adds `currency` and `currency_claimed_at` columns to the existing `users` table using safe `ADD COLUMN IF NOT EXISTS` migrations; existing accounts are preserved.
