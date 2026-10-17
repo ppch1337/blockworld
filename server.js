@@ -153,6 +153,7 @@ async function initializeDatabase() {
   await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS bio VARCHAR(160) NOT NULL DEFAULT ''");
   await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS currency BIGINT NOT NULL DEFAULT 0");
   await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS currency_claimed_at TIMESTAMPTZ");
+  await pool.query(`CREATE TABLE IF NOT EXISTS user_inventory (user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE, item_id VARCHAR(80) NOT NULL, purchased_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY (user_id, item_id))`);
   await pool.query("UPDATE users SET display_name = username WHERE display_name = ''");
   await pool.query('SELECT 1');
   console.log('Connected to PostgreSQL; account tables are ready.');
@@ -316,6 +317,45 @@ app.post('/api/profile', async (req, res) => {
   }
 });
 
+
+
+const CATALOG_ITEMS = {
+  'blockworld-tee': { name: 'BlockWorld Tee', price: 99 },
+  'pixel-pop-tee': { name: 'Pixel Pop Tee', price: 175 },
+  'classic-top-hat': { name: 'Classic Black Top Hat', price: 199 },
+  'neon-crown': { name: 'Neon Dream Crown', price: 349 }
+};
+app.get('/api/catalog/owned', async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Log in to view your inventory.' });
+  if (!pool) return res.status(503).json({ error: 'Catalog purchases require the connected PostgreSQL database.' });
+  try { const result = await pool.query('SELECT item_id FROM user_inventory WHERE user_id = $1', [req.session.userId]); return res.json({ items: result.rows.map(row => row.item_id) }); }
+  catch (error) { console.error('Inventory lookup error:', error.message); return res.status(500).json({ error: 'Could not load your inventory.' }); }
+});
+app.post('/api/catalog/purchase', async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Log in to buy items.' });
+  if (!pool) return res.status(503).json({ error: 'Catalog purchases require the connected PostgreSQL database.' });
+  const itemId = req.body && req.body.itemId;
+  const item = CATALOG_ITEMS[itemId];
+  if (!item) return res.status(400).json({ error: 'That item is not available.' });
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const already = await client.query('SELECT item_id FROM user_inventory WHERE user_id = $1 AND item_id = $2', [req.session.userId, itemId]);
+    if (already.rows.length) { await client.query('ROLLBACK'); return res.status(409).json({ error: 'You already own this item.' }); }
+    const user = await client.query('SELECT currency FROM users WHERE id = $1 FOR UPDATE', [req.session.userId]);
+    if (!user.rows[0]) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'Account not found.' }); }
+    const balance = Number(user.rows[0].currency || 0);
+    if (balance < item.price) { await client.query('ROLLBACK'); return res.status(400).json({ error: 'You need ' + (item.price - balance) + ' more coins to buy this item.' }); }
+    const updated = await client.query('UPDATE users SET currency = currency - $1 WHERE id = $2 RETURNING currency', [item.price, req.session.userId]);
+    await client.query('INSERT INTO user_inventory (user_id, item_id) VALUES ($1, $2)', [req.session.userId, itemId]);
+    await client.query('COMMIT');
+    return res.json({ success: true, itemId, balance: Number(updated.rows[0].currency) });
+  } catch (error) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    console.error('Catalog purchase error:', error.message);
+    return res.status(500).json({ error: 'Could not complete the purchase right now.' });
+  } finally { client.release(); }
+});
 
 // Currency wallet and hourly reward. The server chooses the amount and enforces the cooldown.
 app.get('/api/currency', async (req, res) => {
