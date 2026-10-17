@@ -30,12 +30,10 @@
 /* Wear the same top-hat silhouette and colors shown in the catalog */
 .avatar-hat.neon-catalog-hat{width:110px;height:94px;top:-77px;left:22px;z-index:5}
 
-/* Classic black top hat uses the exact same silhouette and placement as the Neon Dream Top Hat */
-.avatar-hat:not(.neon-catalog-hat){width:110px;height:94px;top:-77px;left:22px;z-index:5}
-.avatar-hat:not(.neon-catalog-hat) .crown{left:27px;top:8px;bottom:auto;width:56px;height:60px;box-sizing:border-box;border:4px solid #252044;border-radius:15px 15px 5px 5px;background:#050505;box-shadow:inset -8px 0 rgba(255,255,255,.05)}
+/* Classic and neon hats share identical geometry; only their colors differ. */
+.avatar-hat:not(.neon-catalog-hat) .crown{left:27px;top:8px;bottom:auto;width:56px;height:60px;box-sizing:border-box;border:4px solid #252044;border-radius:15px 15px 5px 5px;border-bottom:4px solid #252044;background:#050505;box-shadow:inset -8px 0 rgba(37,32,68,.12)}
 .avatar-hat:not(.neon-catalog-hat) .band{left:28px;top:51px;bottom:auto;width:55px;height:11px;box-sizing:border-box;background:#303030;border-top:3px solid #252044;border-bottom:3px solid #252044;z-index:2}
-.avatar-hat:not(.neon-catalog-hat) .brim{left:7px;top:64px;bottom:auto;width:96px;height:20px;box-sizing:border-box;background:#050505;border:4px solid #252044;border-radius:50%;z-index:3}
-
+.avatar-hat:not(.neon-catalog-hat) .brim{left:7px;top:64px;bottom:auto;width:96px;height:18px;box-sizing:border-box;border:4px solid #252044;border-radius:50%;background:#050505;z-index:3}
 .avatar-hat.neon-catalog-hat .crown{left:27px;top:8px;bottom:auto;width:56px;height:60px;box-sizing:border-box;border:4px solid #252044;border-radius:15px 15px 5px 5px;border-bottom:4px solid #252044;background:linear-gradient(135deg,#7cf5e8 0%,#7cf5e8 28%,#ff5da8 29%,#ff5da8 58%,#6b35d5 59%,#6b35d5 100%);box-shadow:inset -8px 0 rgba(37,32,68,.12)}
 .avatar-hat.neon-catalog-hat .band{left:28px;top:51px;bottom:auto;width:55px;height:11px;box-sizing:border-box;background:#ffcf4a;border-top:3px solid #252044;border-bottom:3px solid #252044;z-index:2}
 .avatar-hat.neon-catalog-hat .brim{left:7px;top:64px;bottom:auto;width:96px;height:18px;box-sizing:border-box;border:4px solid #252044;border-radius:50%;background:linear-gradient(90deg,#7cf5e8,#ff5da8,#6b35d5);z-index:3}
