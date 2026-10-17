@@ -151,6 +151,7 @@ async function initializeDatabase() {
   // Add profile fields safely for existing accounts; existing users are preserved.
   await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name VARCHAR(30) NOT NULL DEFAULT ''");
   await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS bio VARCHAR(160) NOT NULL DEFAULT ''");
+  await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_outfit JSONB NOT NULL DEFAULT '{}'::jsonb");
   await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS currency BIGINT NOT NULL DEFAULT 0");
   await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS currency_claimed_at TIMESTAMPTZ");
   await pool.query(`CREATE TABLE IF NOT EXISTS user_inventory (user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE, item_id VARCHAR(80) NOT NULL, purchased_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY (user_id, item_id))`);
@@ -262,15 +263,15 @@ app.get('/api/profile/:username', async (req, res) => {
       catch (error) { if (error.code !== 'ENOENT') throw error; }
       const user = users.find(item => item.username.toLowerCase() === username.toLowerCase());
       if (!user) return res.status(404).json({ error: 'We couldn’t find that player.' });
-      return res.json({ profile: { username: user.username, displayName: user.display_name || user.displayName || user.username, bio: user.bio || '', createdAt: user.created_at || null } });
+      return res.json({ profile: { username: user.username, displayName: user.display_name || user.displayName || user.username, bio: user.bio || '', createdAt: user.created_at || null, outfit: user.avatar_outfit || user.avatarOutfit || {} } });
     }
     const result = await pool.query(
-      'SELECT username, display_name, bio, created_at FROM users WHERE lower(username) = lower($1) LIMIT 1',
+      'SELECT username, display_name, bio, created_at, avatar_outfit FROM users WHERE lower(username) = lower($1) LIMIT 1',
       [username]
     );
     const user = result.rows[0];
     if (!user) return res.status(404).json({ error: 'We couldn’t find that player.' });
-    return res.json({ profile: { username: user.username, displayName: user.display_name || user.username, bio: user.bio || '', createdAt: user.created_at } });
+    return res.json({ profile: { username: user.username, displayName: user.display_name || user.username, bio: user.bio || '', createdAt: user.created_at, outfit: user.avatar_outfit || {} } });
   } catch (error) {
     console.error('Public profile lookup error:', error.message);
     return res.status(500).json({ error: 'Could not load that profile right now.' });
@@ -324,6 +325,24 @@ const CATALOG_ITEMS = {
   'neon-crown': { name: 'Neon Dream Top Hat', price: 349 },
   'og': { name: 'og', price: 650 }
 };
+app.post('/api/avatar/outfit', async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Log in to save your avatar.' });
+  if (!pool) return res.status(503).json({ error: 'Avatar saving requires the connected database.' });
+  const body = req.body || {};
+  const outfit = {
+    skinColor: /^#[0-9a-fA-F]{6}$/.test(body.skinColor || '') ? body.skinColor : '#ffd83d',
+    shirt: body.shirt === 'pixel' ? 'pixel' : 'classic',
+    hat: ['none','classic','neon','og'].includes(body.hat) ? body.hat : 'none'
+  };
+  try {
+    await pool.query('UPDATE users SET avatar_outfit = $1::jsonb WHERE id = $2', [JSON.stringify(outfit), req.session.userId]);
+    return res.json({ success: true, outfit });
+  } catch (error) {
+    console.error('Avatar outfit save error:', error.message);
+    return res.status(500).json({ error: 'Could not save your avatar right now.' });
+  }
+});
+
 app.get('/api/catalog/owned', async (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Log in to view your inventory.' });
   if (!pool) return res.status(503).json({ error: 'Catalog purchases require the connected PostgreSQL database.' });
