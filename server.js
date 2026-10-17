@@ -321,7 +321,8 @@ app.post('/api/profile', async (req, res) => {
 
 const CATALOG_ITEMS = {
   'blockworld-tee': { name: 'BlockWorld Tee', price: 99 },
-  'neon-crown': { name: 'Neon Dream Top Hat', price: 349 }
+  'neon-crown': { name: 'Neon Dream Top Hat', price: 349 },
+  'og': { name: 'og', price: 650 }
 };
 app.get('/api/catalog/owned', async (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Log in to view your inventory.' });

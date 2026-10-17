@@ -20,6 +20,18 @@
 .catalog-hat-crown{position:absolute;left:42px;top:12px;width:86px;height:92px;border:4px solid #252044;border-radius:15px 15px 5px 5px;background:linear-gradient(135deg,#7cf5e8 0%,#7cf5e8 28%,#ff5da8 29%,#ff5da8 58%,#6b35d5 59%,#6b35d5 100%);box-shadow:inset -8px 0 rgba(37,32,68,.12)}
 .catalog-hat-band{position:absolute;left:43px;top:78px;width:84px;height:17px;background:#ffcf4a;border-top:3px solid #252044;border-bottom:3px solid #252044;z-index:2}
 .catalog-hat-brim{position:absolute;left:12px;top:98px;width:146px;height:28px;border:4px solid #252044;border-radius:50%;background:linear-gradient(90deg,#7cf5e8,#ff5da8,#6b35d5);z-index:3}
+/* OG golden trophy item artwork */
+.catalog-og-trophy{position:relative;width:150px;height:150px;display:block;filter:drop-shadow(4px 6px 0 rgba(37,32,68,.16))}
+.catalog-og-cup{position:absolute;left:43px;top:20px;width:64px;height:59px;background:linear-gradient(135deg,#fff0a0 0%,#f8c72e 28%,#c98200 52%,#ffe66b 74%,#d99a08 100%);border:4px solid #6c4200;border-radius:9px 9px 20px 20px;display:grid;place-items:center;color:#543000;font-weight:1000;font-size:17px;text-transform:lowercase;text-shadow:0 1px #fff0a0}
+.catalog-og-cup:before,.catalog-og-cup:after{content:"";position:absolute;top:9px;width:22px;height:25px;border:5px solid #d99a08;border-radius:50%;z-index:-1}
+.catalog-og-cup:before{left:-22px}.catalog-og-cup:after{right:-22px}
+.catalog-og-stem{position:absolute;left:66px;top:79px;width:18px;height:20px;background:linear-gradient(90deg,#b87900,#ffe66b,#c98200);border:3px solid #6c4200}
+.catalog-og-base{position:absolute;left:49px;top:98px;width:52px;height:15px;background:linear-gradient(#ffe66b,#c98200);border:3px solid #6c4200;border-radius:4px}
+.item-preview .catalog-og-trophy{transform:scale(.38);transform-origin:center center;flex:none}
+#catalogAvatarPreview .catalog-og-trophy{transform:scale(1.2)}
+.avatar-og-trophy{position:absolute;z-index:7;left:25px;top:-53px;width:104px;height:65px;pointer-events:none}
+.avatar-og-trophy .catalog-og-trophy{transform:scale(.62);transform-origin:top left}
+
 /* Consistent Neon Dream Top Hat artwork across catalog and owned-item thumbnail */
 .item-preview .catalog-item-only{width:58px;height:58px;min-height:0;display:grid;place-items:center;overflow:hidden}
 .item-preview .catalog-hat-only{min-height:0}
@@ -404,18 +416,20 @@ document.getElementById('findProfileForm').addEventListener('submit',async e=>{
 });
 
 const catalogItems = [
- {id:'neon-crown',name:'Neon Dream Top Hat',description:'A bright neon top hat accessory for standing out in every world.',price:349,originalPrice:500,type:'hat',look:'crown'}
+ {id:'neon-crown',name:'Neon Dream Top Hat',description:'A bright neon top hat accessory for standing out in every world.',price:349,originalPrice:500,type:'hat',look:'crown',onSale:true},
+ {id:'og',name:'og',description:'belongs to the og players of BlockWorld.',price:650,type:'trophy',look:'trophy',onSale:false}
 ];
 let catalogOwned = new Set();
 let selectedCatalogItem = null;
 function catalogAvatarMarkup(item){
+ if(item.type==='trophy') return '<div class="catalog-item-only"><div class="catalog-og-trophy"><div class="catalog-og-cup">og</div><div class="catalog-og-stem"></div><div class="catalog-og-base"></div></div></div>';
  const hat=item.type==='hat';
  if(hat) return '<div class="catalog-item-only catalog-hat-only"><div class="catalog-top-hat"><div class="catalog-hat-crown"></div><div class="catalog-hat-band"></div><div class="catalog-hat-brim"></div></div></div>';
  return '<div class="catalog-item-only"><div class="catalog-shirt-only" style="background:'+item.color+'"><span class="avatar-shirt-logo"><svg class="bw-brand-logo" viewBox="0 0 40 40" aria-label="BlockWorld logo"><rect x="3" y="3" width="31" height="31" rx="10" fill="#fff" stroke="#252044" stroke-width="2"/><path d="M12 8h10c6 0 8 7 3 10 5 3 2 9-4 9H12z" fill="#ff5da8" stroke="#252044" stroke-width="1.5"/><path d="M15 11h6c3 0 4 4 1 5h-7zm0 8h7c3 0 3 5 0 5h-7z" fill="#6b35d5" stroke="#fff" stroke-width=".6"/></svg></span></div></div>';
 }
 function renderCatalog(){
  const grid=document.getElementById('catalogGrid'); if(!grid)return;
- grid.innerHTML=catalogItems.map(item=>'<button type="button" class="catalog-card" data-catalog-item="'+item.id+'" aria-label="View '+escapeText(item.name)+' details"><div class="catalog-art"><span class="sale-tag">SALE</span>'+catalogAvatarMarkup(item)+'</div><div class="catalog-card-copy"><strong>'+escapeText(item.name)+'</strong><p>'+escapeText(item.description)+'</p><div class="catalog-price"><span><span class="price-now">'+item.price+' coins</span><span class="price-old">'+item.originalPrice+'</span></span><span class="coin-small">'+(catalogOwned.has(item.id)?'OWNED':'VIEW ITEM ↗')+'</span></div></div></button>').join('');
+ grid.innerHTML=catalogItems.map(item=>'<button type="button" class="catalog-card" data-catalog-item="'+item.id+'" aria-label="View '+escapeText(item.name)+' details"><div class="catalog-art">'+(item.onSale?'<span class="sale-tag">SALE</span>':'')+catalogAvatarMarkup(item)+'</div><div class="catalog-card-copy"><strong>'+escapeText(item.name)+'</strong><p>'+escapeText(item.description)+'</p><div class="catalog-price"><span><span class="price-now">'+item.price+' coins</span><span class="price-old">'+item.originalPrice+'</span></span><span class="coin-small">'+(catalogOwned.has(item.id)?'OWNED':'VIEW ITEM ↗')+'</span></div></div></button>').join('');
  grid.querySelectorAll('[data-catalog-item]').forEach(card=>card.addEventListener('click',()=>openCatalogItem(card.dataset.catalogItem)));
 }
 async function fetchCatalogOwnership(){
@@ -434,15 +448,17 @@ async function loadCatalogInventoryForStudio(){
 function toggleCatalogWear(itemId,button){
  const avatarHat=document.getElementById('avatarHat');
  const isWearing=button.dataset.wearing==='true';
- if(isWearing){avatarHat.style.display='none';avatarHat.classList.remove('neon-catalog-hat');button.dataset.wearing='false';button.textContent='Wear item';button.classList.add('primary');button.classList.remove('light');return}
- document.getElementById('avatarHair').style.display='block';avatarHat.style.display='block';avatarHat.classList.add('neon-catalog-hat');
+ if(isWearing){const trophy=document.getElementById('avatarOgTrophy');if(trophy)trophy.remove();avatarHat.style.display='none';avatarHat.classList.remove('neon-catalog-hat');button.dataset.wearing='false';button.textContent='Wear item';button.classList.add('primary');button.classList.remove('light');return}
+ document.getElementById('avatarHair').style.display='block';
+ if(itemId==='og'){const old=document.getElementById('avatarOgTrophy');if(old)old.remove();const el=document.createElement('div');el.id='avatarOgTrophy';el.className='avatar-og-trophy';el.innerHTML='<div class="catalog-og-trophy"><div class="catalog-og-cup">og</div><div class="catalog-og-stem"></div><div class="catalog-og-base"></div></div>';document.getElementById('avatarPreview').appendChild(el);avatarHat.style.display='none';}
+ else {avatarHat.style.display='block';avatarHat.classList.add('neon-catalog-hat');}
  button.dataset.wearing='true';button.textContent='Remove item';button.classList.remove('primary');button.classList.add('light');
 }
 
 function openCatalogItem(id){
  const item=catalogItems.find(x=>x.id===id);if(!item)return;selectedCatalogItem=item;
  document.getElementById('catalogModalName').textContent=item.name;document.getElementById('catalogModalDescription').textContent=item.description;
- document.getElementById('catalogModalPrice').textContent=item.price.toLocaleString()+' coins';document.getElementById('catalogModalOldPrice').textContent=item.originalPrice.toLocaleString()+' coins';
+ document.getElementById('catalogModalPrice').textContent=item.price.toLocaleString()+' coins';document.getElementById('catalogModalOldPrice').textContent=item.onSale?item.originalPrice.toLocaleString()+' coins':'';
  document.getElementById('catalogAvatarPreview').innerHTML=catalogAvatarMarkup(item);const owned=catalogOwned.has(item.id);
  document.getElementById('catalogModalStatus').textContent=owned?'You already own this item.':'Preview the item above, then purchase it with your coins.';
  const buy=document.getElementById('catalogBuyButton');buy.textContent=owned?'Already owned':'Buy for '+item.price.toLocaleString()+' coins';buy.disabled=owned;buy.classList.toggle('light',owned);buy.classList.toggle('primary',!owned);
