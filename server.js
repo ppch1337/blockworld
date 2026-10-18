@@ -5,7 +5,6 @@ const bcrypt = require('bcryptjs');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
-const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -451,11 +450,9 @@ app.post('/api/currency/claim', async (req, res) => {
 app.post('/api/account/deletion-request', authLimiter, async (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Log in to request account deletion.' });
   const ownerEmail = process.env.OWNER_EMAIL;
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const smtpPort = Number(process.env.SMTP_PORT || 587);
-  if (!ownerEmail || !smtpHost || !smtpUser || !smtpPass) {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const resendFrom = process.env.RESEND_FROM || 'BlockWorld <onboarding@resend.dev>';
+  if (!ownerEmail || !resendApiKey) {
     return res.status(503).json({ error: 'Account deletion email is not configured yet. Please contact the site owner directly.' });
   }
   try {
@@ -470,14 +467,26 @@ app.post('/api/account/deletion-request', authLimiter, async (req, res) => {
       user = users.find(item => item.id === req.session.userId);
     }
     if (!user) return res.status(404).json({ error: 'Account not found. Please log in again.' });
-    const transporter = nodemailer.createTransport({ host: smtpHost, port: smtpPort, secure: smtpPort === 465, auth: { user: smtpUser, pass: smtpPass } });
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || smtpUser,
-      to: ownerEmail,
-      replyTo: user.email,
-      subject: `BlockWorld account deletion request: ${user.username}`,
-      text: `A player has requested account deletion.\n\nUsername: ${user.username}\nAccount email: ${user.email}\nAccount created: ${user.created_at || 'unknown'}\n\nThis is a request only. No account has been deleted. Please review and process it manually.`
+    const emailResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: resendFrom,
+        to: [ownerEmail],
+        reply_to: user.email,
+        subject: `BlockWorld account deletion request: ${user.username}`,
+        text: `A player has requested account deletion.\n\nUsername: ${user.username}\nAccount email: ${user.email}\nAccount created: ${user.created_at || 'unknown'}\n\nThis is a request only. No account has been deleted. Please review and process it manually.`
+      }),
+      signal: AbortSignal.timeout(15000)
     });
+    const emailResult = await emailResponse.json().catch(() => ({}));
+    if (!emailResponse.ok) {
+      console.error('Account deletion request email failed: Resend API returned', emailResponse.status, emailResult.message || emailResult.name || 'unknown error');
+      return res.status(502).json({ error: 'The email service rejected the deletion request. Please try again later.' });
+    }
     return res.json({ ok: true, message: 'Deletion request sent.' });
   } catch (error) {
     console.error('Account deletion request email failed:', error.message);
