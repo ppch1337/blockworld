@@ -447,50 +447,82 @@ app.post('/api/currency/claim', async (req, res) => {
   }
 });
 
+// Email-confirmed deletion requests. Confirmation only notifies the owner; it never deletes an account.
 app.post('/api/account/deletion-request', authLimiter, async (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Log in to request account deletion.' });
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const resendFrom = process.env.RESEND_FROM || 'BlockWorld <onboarding@resend.dev>';
+  if (!resendApiKey || !pool) return res.status(503).json({ error: 'Email confirmation is not configured. Please contact the site owner.' });
+  try {
+    const result = await pool.query('SELECT username, email FROM users WHERE id = $1', [req.session.userId]);
+    const user = result.rows[0];
+    if (!user) return res.status(404).json({ error: 'Account not found. Please log in again.' });
+    await pool.query(`CREATE TABLE IF NOT EXISTS account_deletion_confirmations (
+      token_hash TEXT PRIMARY KEY, user_id BIGINT NOT NULL, expires_at TIMESTAMPTZ NOT NULL, used_at TIMESTAMPTZ
+    )`);
+    const crypto = require('crypto');
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    await pool.query('DELETE FROM account_deletion_confirmations WHERE expires_at < NOW() OR used_at IS NOT NULL');
+    await pool.query('INSERT INTO account_deletion_confirmations (token_hash,user_id,expires_at) VALUES ($1,$2,NOW()+INTERVAL \'30 minutes\')', [tokenHash, req.session.userId]);
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const confirmUrl = `${baseUrl}/api/account/deletion-confirm/${token}`;
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST', headers: { Authorization: `Bearer ${resendApiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: resendFrom, to: [user.email], subject: 'Confirm your BlockWorld deletion request',
+        text: `Hi ${user.username},\n\nClick this link within 30 minutes to confirm that you want to send an account deletion request to the BlockWorld owner:\n\n${confirmUrl}\n\nThis does NOT delete your account. It only sends a request to the owner for manual review. If you did not request this, ignore this email.` }),
+      signal: AbortSignal.timeout(15000)
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      await pool.query('DELETE FROM account_deletion_confirmations WHERE token_hash=$1', [tokenHash]);
+      console.error('Deletion confirmation email failed:', response.status, body.message || body.name || 'unknown error');
+      return res.status(502).json({ error: 'Could not send the confirmation email. Check your email settings and try again.' });
+    }
+    return res.json({ ok: true, message: 'Check your account email for a confirmation link. It expires in 30 minutes.' });
+  } catch (error) {
+    console.error('Deletion confirmation request failed:', error.message);
+    return res.status(500).json({ error: 'Could not start the confirmation process. Please try again later.' });
+  }
+});
+
+app.get('/api/account/deletion-confirm/:token', async (req, res) => {
   const ownerEmail = process.env.OWNER_EMAIL;
   const resendApiKey = process.env.RESEND_API_KEY;
   const resendFrom = process.env.RESEND_FROM || 'BlockWorld <onboarding@resend.dev>';
-  if (!ownerEmail || !resendApiKey) {
-    return res.status(503).json({ error: 'Account deletion email is not configured yet. Please contact the site owner directly.' });
-  }
+  const crypto = require('crypto');
+  const token = req.params.token || '';
+  if (!/^[a-f0-9]{64}$/.test(token)) return res.status(400).send('This confirmation link is invalid. Please request a new one from BlockWorld.');
+  if (!pool || !ownerEmail || !resendApiKey) return res.status(503).send('Account deletion requests are not configured. Please contact the site owner.');
   try {
-    let user;
-    if (pool) {
-      const result = await pool.query('SELECT username, email, created_at FROM users WHERE id = $1', [req.session.userId]);
-      user = result.rows[0];
-    } else {
-      const fs = require('fs');
-      const usersFile = path.join(__dirname, 'data', 'users.json');
-      const users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
-      user = users.find(item => item.id === req.session.userId);
-    }
-    if (!user) return res.status(404).json({ error: 'Account not found. Please log in again.' });
-    const emailResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: resendFrom,
-        to: [ownerEmail],
-        reply_to: user.email,
-        subject: `BlockWorld account deletion request: ${user.username}`,
-        text: `A player has requested account deletion.\n\nUsername: ${user.username}\nAccount email: ${user.email}\nAccount created: ${user.created_at || 'unknown'}\n\nThis is a request only. No account has been deleted. Please review and process it manually.`
-      }),
-      signal: AbortSignal.timeout(15000)
+    await pool.query(`CREATE TABLE IF NOT EXISTS account_deletion_confirmations (
+      token_hash TEXT PRIMARY KEY, user_id BIGINT NOT NULL, expires_at TIMESTAMPTZ NOT NULL, used_at TIMESTAMPTZ
+    )`);
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const client = await pool.connect();
+    let row;
+    try {
+      await client.query('BEGIN');
+      const found = await client.query('SELECT user_id FROM account_deletion_confirmations WHERE token_hash=$1 AND used_at IS NULL AND expires_at > NOW() FOR UPDATE', [tokenHash]);
+      if (!found.rows.length) { await client.query('ROLLBACK'); return res.status(400).send('This link has expired or has already been used. Please request a new one from BlockWorld.'); }
+      const userResult = await client.query('SELECT username,email,created_at FROM users WHERE id=$1', [found.rows[0].user_id]);
+      row = userResult.rows[0];
+      if (!row) { await client.query('ROLLBACK'); return res.status(404).send('The account could not be found.'); }
+      await client.query('UPDATE account_deletion_confirmations SET used_at=NOW() WHERE token_hash=$1', [tokenHash]);
+      await client.query('COMMIT');
+    } finally { client.release(); }
+    const response = await fetch('https://api.resend.com/emails', {
+      method:'POST', headers:{Authorization:`Bearer ${resendApiKey}`,'Content-Type':'application/json'},
+      body:JSON.stringify({from:resendFrom,to:[ownerEmail],reply_to:row.email,subject:`BlockWorld account deletion request: ${row.username}`,
+        text:`A player confirmed their account deletion request.\n\nUsername: ${row.username}\nAccount email: ${row.email}\nAccount created: ${row.created_at || 'unknown'}\n\nThis is a request only. No account has been deleted. Please review and process it manually.`}),
+      signal:AbortSignal.timeout(15000)
     });
-    const emailResult = await emailResponse.json().catch(() => ({}));
-    if (!emailResponse.ok) {
-      console.error('Account deletion request email failed: Resend API returned', emailResponse.status, emailResult.message || emailResult.name || 'unknown error');
-      return res.status(502).json({ error: 'The email service rejected the deletion request. Please try again later.' });
-    }
-    return res.json({ ok: true, message: 'Deletion request sent.' });
+    const body = await response.json().catch(()=>({}));
+    if (!response.ok) { console.error('Confirmed deletion request email failed:',response.status,body.message||body.name||'unknown error'); return res.status(502).send('Your confirmation was recorded, but the owner notification could not be sent. Please contact the site owner directly.'); }
+    return res.status(200).send('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>BlockWorld request confirmed</title></head><body style="font-family:Arial,sans-serif;max-width:600px;margin:12vh auto;padding:24px;color:#252044"><h1>Request confirmed!</h1><p>Your account deletion request has been emailed to the BlockWorld owner for manual review.</p><p><strong>Your account has not been deleted.</strong> The owner will review your request.</p><p><a href="/">Return to BlockWorld</a></p></body></html>');
   } catch (error) {
-    console.error('Account deletion request email failed:', error.message);
-    return res.status(500).json({ error: 'Could not email the deletion request. Please try again later.' });
+    console.error('Deletion confirmation failed:', error.message);
+    return res.status(500).send('We could not process this confirmation right now. Please try again later.');
   }
 });
 

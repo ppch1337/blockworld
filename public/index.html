@@ -422,7 +422,7 @@ document.getElementById('requestAccountDeletionButton').addEventListener('click'
   const confirmed=window.confirm('Are you sure you want to request deletion of your BlockWorld account? This will email the site owner. Your account will NOT be deleted automatically.');
   if(!confirmed)return;
   const button=document.getElementById('requestAccountDeletionButton');button.disabled=true;button.textContent='Sending request…';
-  try{await authRequest('account/deletion-request',{});toast('Deletion request emailed to the BlockWorld owner.');button.textContent='Request sent';}
+  try{const result=await authRequest('account/deletion-request',{});toast(result.message||'Check your email for a confirmation link.');button.textContent='Confirmation email sent';}
   catch(err){toast(err.message);button.disabled=false;button.textContent='Request account deletion';}
 });
 function publicAvatarMarkup(outfit){
