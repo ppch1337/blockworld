@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -444,6 +445,43 @@ app.post('/api/currency/claim', async (req, res) => {
     return res.status(500).json({ error: 'Could not claim your reward right now.' });
   } finally {
     client.release();
+  }
+});
+
+app.post('/api/account/deletion-request', authLimiter, async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Log in to request account deletion.' });
+  const ownerEmail = process.env.OWNER_EMAIL;
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+  const smtpPort = Number(process.env.SMTP_PORT || 587);
+  if (!ownerEmail || !smtpHost || !smtpUser || !smtpPass) {
+    return res.status(503).json({ error: 'Account deletion email is not configured yet. Please contact the site owner directly.' });
+  }
+  try {
+    let user;
+    if (pool) {
+      const result = await pool.query('SELECT username, email, created_at FROM users WHERE id = $1', [req.session.userId]);
+      user = result.rows[0];
+    } else {
+      const fs = require('fs');
+      const usersFile = path.join(__dirname, 'data', 'users.json');
+      const users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
+      user = users.find(item => item.id === req.session.userId);
+    }
+    if (!user) return res.status(404).json({ error: 'Account not found. Please log in again.' });
+    const transporter = nodemailer.createTransport({ host: smtpHost, port: smtpPort, secure: smtpPort === 465, auth: { user: smtpUser, pass: smtpPass } });
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || smtpUser,
+      to: ownerEmail,
+      replyTo: user.email,
+      subject: `BlockWorld account deletion request: ${user.username}`,
+      text: `A player has requested account deletion.\n\nUsername: ${user.username}\nAccount email: ${user.email}\nAccount created: ${user.created_at || 'unknown'}\n\nThis is a request only. No account has been deleted. Please review and process it manually.`
+    });
+    return res.json({ ok: true, message: 'Deletion request sent.' });
+  } catch (error) {
+    console.error('Account deletion request email failed:', error.message);
+    return res.status(500).json({ error: 'Could not email the deletion request. Please try again later.' });
   }
 });
 

@@ -174,11 +174,15 @@
       <p style="margin:0 0 22px;color:var(--muted);font-size:13px;line-height:1.5">Your username is how players find you. Your display name and bio appear on your public profile.</p>
       <div id="profileSignedOut" class="notice" style="display:none;margin:0 0 15px">Log in to create or edit your player profile.</div>
       <form id="profileForm">
-        <div class="field"><label for="profileUsername">USERNAME</label><input id="profileUsername" name="username" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_]{3,20}" autocomplete="username" placeholder="Your unique username"><div class="notice">3–20 letters, numbers, or underscores. Usernames must be unique.</div></div>
         <div class="field"><label for="profileDisplayName">DISPLAY NAME</label><input id="profileDisplayName" name="displayName" required minlength="1" maxlength="30" placeholder="What should we call you?"></div>
         <div class="field"><label for="profileBio">BIO</label><textarea id="profileBio" name="bio" maxlength="160" rows="4" placeholder="Tell the BlockWorld community about yourself…" style="width:100%;padding:13px 14px;border:1px solid #dfe4ef;border-radius:11px;background:#fafbfe;resize:vertical"></textarea><div class="notice"><span id="bioCount">0</span>/160 characters</div></div>
         <button class="btn primary" id="saveProfileButton" type="submit">Save profile</button>
       </form>
+      <div id="accountDangerZone" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line);display:none">
+        <h3 style="margin:0 0 8px;font-size:16px;color:#b42318">Delete account</h3>
+        <p style="font-size:13px;line-height:1.5;color:var(--muted);margin:0 0 12px">Send the BlockWorld owner a request to delete your account. Your account will not be deleted automatically.</p>
+        <button class="btn" id="requestAccountDeletionButton" type="button" style="background:#b42318;color:white">Request account deletion</button>
+      </div>
       <div id="profilePreview" style="margin-top:24px;padding:18px;border:1px solid var(--line);border-radius:14px;background:#fafbff;display:none">
         <div style="display:flex;align-items:center;gap:13px"><div class="profile-avatar" id="profileAvatarPicture" aria-label="Your avatar profile picture"><div class="profile-avatar-hair"></div><div class="profile-avatar-hat"></div><div class="profile-avatar-head"><div class="profile-avatar-eyes"><i></i><i></i></div><div class="profile-avatar-mouth"></div></div></div><div><div id="previewDisplayName" style="font-weight:900;font-size:18px"></div><div id="previewUsername" style="color:var(--muted);font-size:13px;margin-top:3px"></div></div></div>
         <p id="previewBio" style="font-size:14px;line-height:1.6;white-space:pre-wrap;margin:15px 0 0;color:#454b60"></p>
@@ -297,7 +301,7 @@ function updateUserActions(){
 function updateProfileForm(){
   const signedOut=document.getElementById('profileSignedOut');const form=document.getElementById('profileForm');const preview=document.getElementById('profilePreview');
   signedOut.style.display=currentUser?'none':'block';form.querySelectorAll('input,textarea,button').forEach(el=>el.disabled=!currentUser);preview.style.display=currentUser?'block':'none';
-  if(currentUser){document.getElementById('profileUsername').value=currentUser.username||'';document.getElementById('profileDisplayName').value=currentUser.displayName||currentUser.username||'';document.getElementById('profileBio').value=currentUser.bio||'';updateProfilePreview(currentUser)}else{document.getElementById('profileUsername').value='';document.getElementById('profileDisplayName').value='';document.getElementById('profileBio').value='';document.getElementById('bioCount').textContent='0'}
+  document.getElementById('accountDangerZone').style.display=currentUser?'block':'none';if(currentUser){document.getElementById('profileDisplayName').value=currentUser.displayName||currentUser.username||'';document.getElementById('profileBio').value=currentUser.bio||'';updateProfilePreview(currentUser)}else{document.getElementById('profileDisplayName').value='';document.getElementById('profileBio').value='';document.getElementById('bioCount').textContent='0'}
 }
 function updateProfilePreview(user){
   const username=user.username||'';const displayName=user.displayName||username;const bio=user.bio||'';
@@ -410,8 +414,16 @@ document.getElementById('profileBio').addEventListener('input',()=>{document.get
 document.getElementById('profileForm').addEventListener('submit',async e=>{
   e.preventDefault();if(!currentUser){toast('Log in to edit your profile.');return}
   const button=document.getElementById('saveProfileButton');button.disabled=true;button.textContent='Saving…';
-  try{const data=await authRequest('profile',{username:document.getElementById('profileUsername').value.trim(),displayName:document.getElementById('profileDisplayName').value.trim(),bio:document.getElementById('profileBio').value.trim()});currentUser=data.user;signedInAs=data.user.username;updateUserActions();updateProfileForm();toast('Profile saved!')}
+  try{const data=await authRequest('profile',{username:currentUser.username,displayName:document.getElementById('profileDisplayName').value.trim(),bio:document.getElementById('profileBio').value.trim()});currentUser=data.user;signedInAs=data.user.username;updateUserActions();updateProfileForm();toast('Profile saved!')}
   catch(err){toast(err.message)}finally{button.disabled=false;button.textContent='Save profile'}
+});
+document.getElementById('requestAccountDeletionButton').addEventListener('click',async()=>{
+  if(!currentUser)return toast('Log in first to request account deletion.');
+  const confirmed=window.confirm('Are you sure you want to request deletion of your BlockWorld account? This will email the site owner. Your account will NOT be deleted automatically.');
+  if(!confirmed)return;
+  const button=document.getElementById('requestAccountDeletionButton');button.disabled=true;button.textContent='Sending request…';
+  try{await authRequest('account/deletion-request',{});toast('Deletion request emailed to the BlockWorld owner.');button.textContent='Request sent';}
+  catch(err){toast(err.message);button.disabled=false;button.textContent='Request account deletion';}
 });
 function publicAvatarMarkup(outfit){
  const o=outfit&&typeof outfit==='object'?outfit:{};const hat=o.hat||'none';const shirt=o.shirt==='pixel'?'pixel':'classic';const skin=/^#[0-9a-fA-F]{6}$/.test(o.skinColor||'')?o.skinColor:'#ffd83d';const hairColor=/^#[0-9a-fA-F]{6}$/.test(o.hairColor||'')?o.hairColor:'#473026';const hairStyle=o.hairStyle==='long'?'long-hair':'';
