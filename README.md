@@ -85,3 +85,8 @@ The Currency page lets logged-in players claim a random 100–500 coins once eve
 
 ## Hourly reward UI update
 The navigation label is now Hourly Reward. A BlockWorld BW coin icon is used for the wallet and a persistent header counter shows the logged-in player's balance.
+
+
+## Account deletion request emails (Render Free)
+
+Deletion requests are sent through Resend's HTTPS API (not SMTP), which avoids Render Free's outbound SMTP port restrictions. In Render → your web service → Environment, set `OWNER_EMAIL` to the inbox that should receive requests and `RESEND_API_KEY` to your Resend API key. `RESEND_FROM` is optional and defaults to `BlockWorld <onboarding@resend.dev>` for initial testing. Resend's onboarding sender can only deliver to the email address associated with your Resend account; to send to other recipients, verify a domain in Resend and set `RESEND_FROM` to an address on that domain. Remove the old `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM` variables after switching. This endpoint sends a request for manual review only; it does not delete accounts.
