@@ -319,6 +319,37 @@ app.post('/api/profile', async (req, res) => {
 });
 
 
+// Username changes cost 10,000 coins. Lock the user row so concurrent requests cannot overspend.
+app.post('/api/profile/change-username', async (req, res) => {
+  if (!req.session.userId) return res.status(401).json({ error: 'Log in to change your username.' });
+  const username = typeof (req.body || {}).username === 'string' ? req.body.username.trim() : '';
+  if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) return res.status(400).json({ error: 'Username must be 3–20 characters and use only letters, numbers, or underscores.' });
+  if (!pool) return res.status(503).json({ error: 'Username changes require the connected PostgreSQL database.' });
+  const cost = 10000;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const found = await client.query('SELECT id, username, email, display_name, bio, created_at, currency FROM users WHERE id = $1 FOR UPDATE', [req.session.userId]);
+    const user = found.rows[0];
+    if (!user) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'Account not found. Please log in again.' }); }
+    if (String(user.username).toLowerCase() === username.toLowerCase()) { await client.query('ROLLBACK'); return res.status(400).json({ error: 'That is already your username.' }); }
+    const balance = Number(user.currency || 0);
+    if (balance < cost) { await client.query('ROLLBACK'); return res.status(400).json({ error: 'Changing your username costs 10,000 coins. You need ' + (cost - balance).toLocaleString() + ' more coins.' }); }
+    const taken = await client.query('SELECT id FROM users WHERE LOWER(username) = LOWER($1) AND id <> $2 LIMIT 1', [username, req.session.userId]);
+    if (taken.rows.length) { await client.query('ROLLBACK'); return res.status(409).json({ error: 'That username is already taken.' }); }
+    const updated = await client.query('UPDATE users SET username = $1, currency = currency - $2 WHERE id = $3 RETURNING id, username, email, display_name, bio, created_at, currency', [username, cost, req.session.userId]);
+    await client.query('COMMIT');
+    const row = updated.rows[0];
+    return res.json({ user: publicUser(row), balance: Number(row.currency || 0), cost });
+  } catch (error) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    if (error.code === '23505') return res.status(409).json({ error: 'That username is already taken.' });
+    console.error('Username change error:', error.message);
+    return res.status(500).json({ error: 'Could not change your username right now.' });
+  } finally { client.release(); }
+});
+
+
 
 const CATALOG_ITEMS = {
   'blockworld-tee': { name: 'BlockWorld Tee', price: 99 },
