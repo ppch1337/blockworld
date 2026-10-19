@@ -354,6 +354,7 @@ app.post('/api/profile/change-username', async (req, res) => {
 const CATALOG_ITEMS = {
   'blockworld-tee': { name: 'BlockWorld Tee', price: 99 },
   'neon-crown': { name: 'Neon Dream Top Hat', price: 349 },
+  'pumpkin': { name: 'Jack-O-Lantern', price: 100 },
   'og': { name: 'og', price: 650 }
 };
 app.post('/api/avatar/outfit', async (req, res) => {
@@ -363,7 +364,7 @@ app.post('/api/avatar/outfit', async (req, res) => {
   const outfit = {
     skinColor: /^#[0-9a-fA-F]{6}$/.test(body.skinColor || '') ? body.skinColor : '#ffd83d',
     shirt: body.shirt === 'pixel' ? 'pixel' : 'classic',
-    hat: ['none','classic','neon','og'].includes(body.hat) ? body.hat : 'none',
+    hat: ['none','classic','neon','og','pumpkin'].includes(body.hat) ? body.hat : 'none',
     hairColor: /^#[0-9a-fA-F]{6}$/.test(body.hairColor || '') ? body.hairColor : '#473026',
     hairStyle: body.hairStyle === 'long' ? 'long' : 'short'
   };
