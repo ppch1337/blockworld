@@ -15,7 +15,7 @@
 
 
 .catalog-item-only{width:100%;height:100%;min-height:150px;display:grid;place-items:center;position:relative;overflow:hidden}
-.catalog-hat-only{min-height:150px}.catalog-pumpkin-mask{width:118px;height:104px;position:relative;background:linear-gradient(90deg,#e66a0a 0%,#ff9825 24%,#f77d13 50%,#ff9825 76%,#d85b08 100%);border:4px solid #252044;border-radius:48% 48% 44% 44%/42% 42% 55% 55%;box-shadow:inset 0 -8px rgba(133,49,0,.16),inset 0 0 0 2px #ffb64d;transform:scale(.9)}.catalog-pumpkin-mask:before{content:"";position:absolute;left:21px;top:36px;width:20px;height:24px;background:#252044;clip-path:polygon(50% 0,100% 100%,0 100%);filter:drop-shadow(0 0 1px #252044);box-shadow:0 0 0 1px #252044}.catalog-pumpkin-mask:after{content:"";position:absolute;right:21px;top:36px;width:20px;height:24px;background:#252044;clip-path:polygon(50% 0,100% 100%,0 100%)}.pumpkin-mouth{position:absolute;left:24px;right:24px;bottom:18px;height:17px;background:#252044;clip-path:polygon(0 0,18% 20%,18% 0,36% 20%,36% 0,54% 20%,54% 0,72% 20%,72% 0,100% 0,100% 100%,0 100%);border-radius:2px}.pumpkin-stem{position:absolute;left:49px;top:-15px;width:18px;height:23px;background:#4b7b27;border:3px solid #252044;border-radius:5px 5px 1px 1px;transform:rotate(5deg)}
+.catalog-hat-only{min-height:150px}.catalog-pumpkin-mask{width:118px;height:104px;position:relative;background:linear-gradient(90deg,#e66a0a 0%,#ff9825 24%,#f77d13 50%,#ff9825 76%,#d85b08 100%);border:4px solid #252044;border-radius:48% 48% 44% 44%/42% 42% 55% 55%;box-shadow:inset 0 -8px rgba(133,49,0,.16),inset 0 0 0 2px #ffb64d;transform:scale(.9)}.catalog-pumpkin-mask:before{content:"";position:absolute;left:21px;top:36px;width:20px;height:24px;background:#252044;clip-path:polygon(50% 0,100% 100%,0 100%);filter:drop-shadow(0 0 1px #252044);box-shadow:0 0 0 1px #252044}.catalog-pumpkin-mask:after{content:"";position:absolute;right:21px;top:36px;width:20px;height:24px;background:#252044;clip-path:polygon(50% 0,100% 100%,0 100%)}.pumpkin-mouth{position:absolute;left:24px;right:24px;bottom:17px;height:20px;background:#252044;clip-path:polygon(0 0,13% 0,18% 25%,25% 0,38% 0,43% 25%,50% 0,63% 0,68% 25%,75% 0,100% 0,100% 100%,0 100%);border-radius:2px;overflow:hidden}.pumpkin-tooth{position:absolute;top:0;width:9px;height:9px;background:#ffb13b;border:1px solid #252044;box-sizing:border-box;z-index:1;clip-path:polygon(0 0,100% 0,50% 100%)}.pumpkin-tooth.one{left:18%}.pumpkin-tooth.two{left:39%}.pumpkin-tooth.three{left:60%}.pumpkin-tooth.four{left:81%}.pumpkin-stem{position:absolute;left:49px;top:-15px;width:18px;height:23px;background:#4b7b27;border:3px solid #252044;border-radius:5px 5px 1px 1px;transform:rotate(5deg)}
 .catalog-top-hat{width:170px;height:145px;position:relative;filter:drop-shadow(5px 8px 0 rgba(37,32,68,.14));transform:scale(.9)}
 .catalog-hat-crown{position:absolute;left:42px;top:12px;width:86px;height:92px;border:4px solid #252044;border-radius:15px 15px 5px 5px;background:linear-gradient(135deg,#7cf5e8 0%,#7cf5e8 28%,#ff5da8 29%,#ff5da8 58%,#6b35d5 59%,#6b35d5 100%);box-shadow:inset -8px 0 rgba(37,32,68,.12)}
 .catalog-hat-band{position:absolute;left:43px;top:78px;width:84px;height:17px;background:#ffcf4a;border-top:3px solid #252044;border-bottom:3px solid #252044;z-index:2}
@@ -34,7 +34,7 @@
 
 /* Consistent Neon Dream Top Hat artwork across catalog and owned-item thumbnail */
 .item-preview .catalog-item-only{width:58px;height:58px;min-height:0;display:grid;place-items:center;overflow:hidden}
-.item-preview .catalog-hat-only{min-height:0}
+.item-preview .catalog-hat-only{min-height:0}.item-preview .catalog-pumpkin-mask{transform:scale(.32);transform-origin:center center;flex:none}
 .item-preview .catalog-top-hat{transform:scale(.32);transform-origin:center center;flex:none}
 .item-preview .catalog-hat-crown{left:42px;top:12px;width:86px;height:92px;border:4px solid #252044;border-radius:15px 15px 5px 5px;background:linear-gradient(135deg,#7cf5e8 0%,#7cf5e8 28%,#ff5da8 29%,#ff5da8 58%,#6b35d5 59%,#6b35d5 100%)}
 .item-preview .catalog-hat-band{left:43px;top:78px;width:84px;height:17px;background:#ffcf4a;border-top:3px solid #252044;border-bottom:3px solid #252044}
@@ -54,6 +54,7 @@
 .catalog-shirt-only .bw-brand-logo{width:100%;height:100%}
 #catalogAvatarPreview .catalog-item-only{min-height:300px}
 #catalogAvatarPreview .catalog-hat-only{min-height:300px}
+#catalogAvatarPreview .catalog-pumpkin-mask{transform:scale(1.45);transform-origin:center center}
 #catalogAvatarPreview .catalog-top-hat{transform:scale(1.5)}
 
 
@@ -64,7 +65,7 @@
 .public-worn-hat{cursor:pointer;transition:border-color .15s,transform .15s}.public-worn-hat:hover,.public-worn-hat:focus{border-color:#aab8ff;outline:2px solid #c7d2fe;outline-offset:1px}.profile-hat-view{margin-left:auto;font-size:11px;font-weight:800;color:#6255c7;white-space:nowrap}
 .public-worn-icon.artwork{overflow:hidden;position:relative;flex:0 0 48px;padding:0;background:#f0f2ff}
 .public-worn-icon.artwork .catalog-item-only{width:48px;height:48px;min-height:0;overflow:hidden}
-.public-worn-icon.artwork .catalog-hat-only{min-height:0}
+.public-worn-icon.artwork .catalog-hat-only{min-height:0}.public-worn-icon.artwork .catalog-pumpkin-mask{transform:scale(.29);transform-origin:center center;flex:none}
 .public-worn-icon.artwork .catalog-top-hat{position:absolute;left:50%;top:50%;margin-left:-85px;margin-top:-72.5px;transform:scale(.29);transform-origin:center center;flex:none}
 .public-worn-icon.artwork .profile-neon-hat-svg{width:48px;height:48px;display:block;flex:none}.public-worn-icon.artwork .catalog-og-trophy{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.31);transform-origin:center center;flex:none}
 .public-worn-icon.artwork .catalog-hat-crown{background:#090909!important;border-color:#252044}
@@ -478,13 +479,13 @@ let selectedCatalogItem = null;
 function catalogAvatarMarkup(item){
  if(item.type==='trophy') return '<div class="catalog-item-only"><div class="catalog-og-trophy"><div class="catalog-og-cup">og</div><div class="catalog-og-stem"></div><div class="catalog-og-base"></div></div></div>';
  const hat=item.type==='hat';
- if(hat && item.look==='pumpkin') return '<div class="catalog-item-only catalog-hat-only"><div class="catalog-pumpkin-mask"><div class="pumpkin-stem"></div><div class="pumpkin-mouth"></div></div></div>';
+ if(hat && item.look==='pumpkin') return '<div class="catalog-item-only catalog-hat-only"><div class="catalog-pumpkin-mask"><div class="pumpkin-stem"></div><div class="pumpkin-mouth"><i class="pumpkin-tooth one"></i><i class="pumpkin-tooth two"></i><i class="pumpkin-tooth three"></i><i class="pumpkin-tooth four"></i></div></div></div>';
  if(hat) return '<div class="catalog-item-only catalog-hat-only"><div class="catalog-top-hat"><div class="catalog-hat-crown"></div><div class="catalog-hat-band"></div><div class="catalog-hat-brim"></div></div></div>';
  return '<div class="catalog-item-only"><div class="catalog-shirt-only" style="background:'+item.color+'"><span class="avatar-shirt-logo"><svg class="bw-brand-logo" viewBox="0 0 40 40" aria-label="BlockWorld logo"><rect x="3" y="3" width="31" height="31" rx="10" fill="#fff" stroke="#252044" stroke-width="2"/><path d="M12 8h10c6 0 8 7 3 10 5 3 2 9-4 9H12z" fill="#ff5da8" stroke="#252044" stroke-width="1.5"/><path d="M15 11h6c3 0 4 4 1 5h-7zm0 8h7c3 0 3 5 0 5h-7z" fill="#6b35d5" stroke="#fff" stroke-width=".6"/></svg></span></div></div>';
 }
 function renderCatalog(){
  const grid=document.getElementById('catalogGrid'); if(!grid)return;
- grid.innerHTML=catalogItems.map(item=>'<button type="button" class="catalog-card" data-catalog-item="'+item.id+'" aria-label="View '+escapeText(item.name)+' details"><div class="catalog-art">'+(item.onSale?'<span class="sale-tag">SALE</span>':'')+catalogAvatarMarkup(item)+'</div><div class="catalog-card-copy"><strong>'+escapeText(item.name)+'</strong><p>'+escapeText(item.description)+'</p><div class="catalog-price"><span><span class="price-now">'+item.price+' coins</span><span class="price-old">'+item.originalPrice+'</span></span><span class="coin-small">'+(catalogOwned.has(item.id)?'OWNED':'VIEW ITEM ↗')+'</span></div></div></button>').join('');
+ grid.innerHTML=catalogItems.map(item=>'<button type="button" class="catalog-card" data-catalog-item="'+item.id+'" aria-label="View '+escapeText(item.name)+' details"><div class="catalog-art">'+(item.onSale?'<span class="sale-tag">SALE</span>':'')+catalogAvatarMarkup(item)+'</div><div class="catalog-card-copy"><strong>'+escapeText(item.name)+'</strong><p>'+escapeText(item.description)+'</p><div class="catalog-price"><span><span class="price-now">'+item.price+' coins</span>'+(item.originalPrice?'<span class="price-old">'+item.originalPrice+' coins</span>':'')+'</span><span class="coin-small">'+(catalogOwned.has(item.id)?'OWNED':'VIEW ITEM ↗')+'</span></div></div></button>').join('');
  grid.querySelectorAll('[data-catalog-item]').forEach(card=>card.addEventListener('click',()=>openCatalogItem(card.dataset.catalogItem)));
 }
 async function fetchCatalogOwnership(){
